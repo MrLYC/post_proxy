@@ -83,7 +83,19 @@ class RequstData(object):
 
 def proxyhdr(f):
     def to_response(*args, **kw):
-        result = f(*args, **kw)
+        try:
+            result = f(*args, **kw)
+        except Exception as err:
+            bottle.abort(500, str(err))
+
+        headers = {
+            "set-cookie", "content-type"}
+
+        for k, v in result.headers.iteritems():
+            if k in headers:
+                bottle.response.add_header(k, v)
+
+        bottle.response.status = result.status_code
 
         return result.content
     return to_response
@@ -91,7 +103,10 @@ def proxyhdr(f):
 
 @proxyhdr
 def get_proxy(data):
-    return requests.get(data.url, headers=data.headers)
+    return requests.get(
+        data.url,
+        headers=data.headers,
+        timeout=data.try_get(["meta", "timeout"], 10))
 
 
 def proxy_hdr(data):
