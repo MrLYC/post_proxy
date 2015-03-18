@@ -28,25 +28,24 @@ class RequstData(object):
                 "$ref": "#/definitions/argumentfield",
                 "method": {
                     "type": "string",
-                    "oneOf": ["get", "post", "put", "delete"],
+                    "enum": ["get", "post", "put", "delete"],
                 },
                 "url": {
                     "type": "string"
                 },
                 "timeout": "integer",
+                "post_type": {
+                    "enum": ["form", "json"]
+                },
             },
             "headers": {
                 "$ref": "#/definitions/argumentfield"
             },
             "data": {
-                "oneOf": [
-                    {"forms": {
-                        "$ref": "#/definitions/argumentfield"
-                    }},
-                    {"json": {
-                        "$ref": "#/definitions/argumentfield"
-                    }},
-                ]
+                "$ref": "#/definitions/argumentfield",
+            },
+            "body": {
+                "type": "string",
             },
         }
     })
@@ -71,14 +70,6 @@ class RequstData(object):
     @property
     def headers(self):
         return self.try_get(["headers"], {})
-
-    @property
-    def forms(self):
-        return self.try_get(["data", "forms"], None)
-
-    @property
-    def json(self):
-        return self.try_get(["data", "json"], None)
 
 
 def proxyhdr(f):
@@ -109,10 +100,29 @@ def get_proxy(data):
         timeout=data.try_get(["meta", "timeout"], 10))
 
 
+@proxyhdr
+def post_proxy(data):
+    form_data = None
+    json_data = None
+    post_type = data.try_get(["meta", "post_type"])
+
+    if post_type == "form":
+        form_data = data.try_get(["data"])
+    elif post_type == "json":
+        json_data = data.try_get(["data"])
+
+    return requests.post(
+        data.url,
+        headers=data.headers,
+        data=form_data,
+        json=json_data)
+
+
 def proxy_hdr(data):
     method = data.get("meta", "method")
     hdr_map = {
         "get": get_proxy,
+        "post": post_proxy,
     }
     hdr = hdr_map[method]
     return hdr(data)
