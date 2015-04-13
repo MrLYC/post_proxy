@@ -1,6 +1,2 @@
 # proxy
-a project created by LYC
-
-## Features
-
-* TODO
+a special http proxy which accept post request only

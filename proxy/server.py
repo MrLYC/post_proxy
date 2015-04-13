@@ -33,7 +33,10 @@ class RequstData(object):
                 "url": {
                     "type": "string"
                 },
-                "timeout": "integer",
+                "timeout": {
+                    "type": "number",
+                    "minimum": 1,
+                },
                 "post_type": {
                     "enum": ["form", "json"]
                 },
@@ -118,7 +121,8 @@ def post_proxy(data):
         data.url,
         headers=data.headers,
         data=form_data,
-        json=json_data)
+        json=json_data,
+        timeout=data.try_get(["meta", "timeout"], 10))
 
 
 def proxy_hdr(data):
