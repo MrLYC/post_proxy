@@ -79,11 +79,14 @@ def proxyhdr(f):
         except Exception as err:
             bottle.abort(500, str(err))
 
-        headers = {
-            "set-cookie", "content-type"}
+        excluded_headers = {
+            'connection', 'keep-alive', 'proxy-authenticate',
+            'proxy-authorization', 'te', 'trailers', 'transfer-encoding',
+            'content-encoding', 'content-length',
+        }
 
         for k, v in result.headers.iteritems():
-            if k in headers:
+            if k not in excluded_headers:
                 bottle.response.add_header(k, v)
 
         bottle.response.status = result.status_code
